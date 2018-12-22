@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="msapplication-tap-highlight" content="no">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+        <link rel="stylesheet" type="text/css" href="css/index.css">
+        <title>Scan</title>
+    </head>
+    <body>
+        <div class="app">
+            <h1>Escanear códigos</h1>
+			<input id = "qr_code" type="text" placeholder="Nº de serie del teléfono (QR)" required="" onclick="scancode('qr_code')"/>
+			<input id = "bar_code" type="text" placeholder="ICCID de la tarjeta SIM (barras)" required="" onclick="scancode('bar_code')"/>
+			<button type="submit" onclick="add_watch()">Añadir reloj</button>
+        </div>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+		<script type="text/javascript">			
+			function scancode(origin){
+				//TODO Add the scanned code to the form and send it to the server.
+				cordova.plugins.barcodeScanner.scan(
+					function (result) {
+						document.getElementById(origin).value = result.text;
+					},
+					function (error) {
+						alert("Scanning failed: " + error);
+					}
+				);
+			}
+			function add_watch(){
+				var log_param="qr=" + document.getElementById("qr_code").value + "&bar=" + document.getElementById("bar_code").value;
+				var login_url = "https://www.geo-kid.com/configure_watch.php";
+				send_form(login_url, log_param);
+			}
+			function send_form(php_file, params)
+			{
+				var answer;
+				var ans;
+				var send_info = new XMLHttpRequest();
+				send_info.onreadystatechange = function() 
+				{
+					if (this.readyState == 4 && this.status == 200) {
+						ans = this.responseText;
+						if (ans == "FAILURE")
+								alert("Ha ocurrido un error. Por favor, inténtelo de nuevo.");
+						else
+						{
+							document.getElementById("qr_code").value='';
+							document.getElementById("bar_code").value='';
+							alert("Registro insertado correctamente! :-)");
+						}
+							
+
+					}
+				};
+
+				send_info.open("POST", php_file, true);
+				send_info.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+				send_info.send(params);
+					
+			}
+		</script>
+    </body>
+</html>
